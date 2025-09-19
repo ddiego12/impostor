@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Juego del Impostor</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #0d1117;
+      color: #e6edf3;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 15px;
+      margin: 0;
+    }
+    h1 {
+      margin-bottom: 10px;
+      color: #58a6ff;
+      font-size: 1.6em;
+      text-align: center;
+    }
+    .config, .game, .names {
+      background: #161b22;
+      padding: 15px;
+      border-radius: 12px;
+      margin: 10px 0;
+      width: 100%;
+      max-width: 500px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+      font-size: 1em;
+    }
+    input, textarea, button {
+      margin-top: 5px;
+      padding: 12px;
+      width: 100%;
+      border-radius: 8px;
+      border: none;
+      outline: none;
+      font-size: 1em;
+    }
+    textarea {
+      height: 120px;
+      resize: vertical;
+    }
+    button {
+      background: #238636;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background: #2ea043;
+    }
+    .hidden {
+      display: none;
+    }
+    .reveal {
+      font-size: 1.8em;
+      margin: 20px 0;
+      font-weight: bold;
+      text-align: center;
+      word-wrap: break-word;
+    }
+    .impostor {
+      color: #ff4d4d;
+    }
+  </style>
+</head>
+<body>
+  <h1>Juego del Impostor 🎭</h1>
+
+  <div class="config">
+    <label for="numPlayers">Número de jugadores:</label>
+    <input type="number" id="numPlayers" value="5" min="2">
+
+    <label for="numImpostors">Número de impostores:</label>
+    <input type="number" id="numImpostors" value="1" min="1">
+
+    <button type="button" id="startBtn">Iniciar partida</button>
+  </div>
+
+  <div class="names">
+    <h2>Lista de nombres</h2>
+    <p>Edita los nombres (uno por línea):</p>
+    <textarea id="nameList">Messi
+Shakira
+Bad Bunny
+Elon Musk
+Taylor Swift
+Cristiano Ronaldo
+Brad Pitt
+Lady Gaga
+Marcoshappy
+Manao
+Martina
+Ponchi
+Chule
+Daira
+Montes
+Gascón
+Rubén Lopez
+Izan Leo
+Camacho
+Sanzguay
+ChumChum
+Lopez
+Pelirrojo
+Lucas Gamella
+Iago Aspas
+Kevin
+Calin
+Nico
+DenisBRR
+Laurita
+Peperoni
+Mario Marito
+ElrinconDeMario
+Los Colgaos
+Nil Ojeda
+WhereIsLeto
+Elena Valbuena
+La socorrista
+Irene Del Puerto
+Lidia (my love)
+Puche
+Gerardo (LaTela)
+Rafa
+Malami
+Cuellilargo
+Coquito
+Alvarito
+FuckDani
+Abuela Dani
+Tio Dani
+Padre Dani
+Jimena
+Pedro Sanchez
+Abascal
+Vito Quiles
+Bordalas
+Uche
+Aceituna
+Sophia
+Atufeitor
+MeryBomb
+Lucia Rojas
+Hiba
+Higuera
+Diego Esteban
+Vanessa
+Paula (gascon)
+Coqui
+El langui
+Torrente
+El Jincho
+Amador Rivas
+Viecente Maroto
+Fermin Trujillo
+Mente Fría
+Teo con h intercalada
+Leo LQSA
+Javier Maroto
+AriaBela
+Grenheir
+LKJavi
+Jeremy Josue
+Pablosky
+Peso Pluma
+Rusoswky
+AngelGold
+Yung Beef
+AdriBasket
+Sagrario
+Myke Towers
+Yan Block
+DValentino
+Nati
+Rebeca
+Claudia Orduña
+De La Rose
+Jhayco
+Mora
+Almighty
+Ovi
+C Mari
+Dandy de Barcelona
+Simon
+Paco Porras
+Misha
+Misho
+La Maeb
+Jhon Cobra
+Los gemelos de alicante
+Grecas
+Anuel
+Gonzy
+Morad
+Bryant Myers</textarea>
+  </div>
+
+  <div class="game hidden">
+    <div class="reveal hidden" id="revealText"></div>
+    <button type="button" id="revealBtn">Revelar rol</button>
+    <button type="button" id="hideBtn" class="hidden">Ocultar</button>
+  </div>
+
+  <script>
+    let roles = [];
+    let revealedIndex = 0;
+    let chosenName = "";
+
+    document.getElementById("startBtn").addEventListener("click", startGame);
+    document.getElementById("revealBtn").addEventListener("click", revealRole);
+    document.getElementById("hideBtn").addEventListener("click", hideRole);
+
+    function startGame() {
+      const numPlayers = parseInt(document.getElementById('numPlayers').value);
+      const numImpostors = parseInt(document.getElementById('numImpostors').value);
+      const names = document.getElementById('nameList').value
+        .split('\n')
+        .map(n => n.trim())
+        .filter(n => n.length > 0);
+
+      if (numImpostors >= numPlayers) {
+        alert("El número de impostores debe ser menor que el número de jugadores.");
+        return;
+      }
+
+      // Elegir un nombre al azar para todos
+      chosenName = names[Math.floor(Math.random() * names.length)];
+
+      // Crear roles
+      roles = Array(numPlayers).fill("normal");
+      let impostorsAssigned = 0;
+      while (impostorsAssigned < numImpostors) {
+        const idx = Math.floor(Math.random() * numPlayers);
+        if (roles[idx] === "normal") {
+          roles[idx] = "impostor";
+          impostorsAssigned++;
+        }
+      }
+
+      revealedIndex = 0;
+      document.querySelector('.game').classList.remove('hidden');
+      document.getElementById('revealText').classList.add('hidden');
+      document.getElementById('revealBtn').classList.remove('hidden');
+      document.getElementById('hideBtn').classList.add('hidden');
+      document.getElementById('revealBtn').textContent = "Revelar rol del Jugador 1";
+    }
+
+    function revealRole() {
+      if (revealedIndex >= roles.length) {
+        document.getElementById('revealText').textContent = "Todos los roles han sido revelados 🎉";
+        document.getElementById('revealText').classList.remove('hidden');
+        document.getElementById('revealBtn').classList.add('hidden');
+        document.getElementById('hideBtn').classList.add('hidden');
+        return;
+      }
+
+      const role = roles[revealedIndex];
+      const textEl = document.getElementById('revealText');
+
+      if (role === "impostor") {
+        textEl.innerHTML = `<span class="impostor">IMPOSTOR</span>`;
+      } else {
+        textEl.textContent = chosenName;
+      }
+
+      textEl.classList.remove('hidden');
+      document.getElementById('revealBtn').classList.add('hidden');
+      document.getElementById('hideBtn').classList.remove('hidden');
+    }
+
+    function hideRole() {
+      revealedIndex++;
+      document.getElementById('revealText').classList.add('hidden');
+      document.getElementById('hideBtn').classList.add('hidden');
+
+      if (revealedIndex < roles.length) {
+        document.getElementById('revealBtn').textContent =
+          `Revelar rol del Jugador ${revealedIndex + 1}`;
+        document.getElementById('revealBtn').classList.remove('hidden');
+      } else {
+        document.getElementById('revealText').textContent =
+          "Todos los roles han sido revelados 🎉";
+        document.getElementById('revealText').classList.remove('hidden');
+      }
+    }
+  </script>
+</body>
+</html>
